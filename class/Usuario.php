@@ -8,6 +8,13 @@ class Usuario {
     private $dtcadastro;
     
     //magic methods/////////////////////////////////////
+    public function __construct($login = "", $senha = ""){
+        $this->setDeslogin($login);
+        $this->setDessenha($senha);
+    }
+    
+    
+    
     public function __toString(){
         
         return json_encode(array(            
@@ -52,21 +59,34 @@ class Usuario {
         $this->dtcadastro = $dtcadastro;
     }
     
-    ///////////////////////////////////////////////
+    //funções estaticas//////////////////////////////////////////////
+    public static function search($login) {
+        $sql = new Sql();
+        
+        return $sql->select("SELECT * FROM tb_usuarios WHERE deslogin LIKE :SEARCH ORDER BY idusuario", array(":SEARCH" => "%".$login."%"));
+    }
+   
+    
+    //funções publicas/////////////////////////////////////////////    
+    //
+    public function setDados($dados) {
+        
+        $this->setIdusuario($dados["idusuario"]);
+        $this->setDeslogin($dados["deslogin"]);
+        $this->setDessenha($dados["dessenha"]);
+        $this->setDtcadastro(new DateTime($dados["dtcadastro"]));
+    }
+    
     
     public function loadById($id) {
         $sql =  new Sql();
         
-        $result = $sql->select("SELECT * FROM tb_usuarios WHERE idusuario = :ID", array(":ID" => $id));
+        $result = $sql->select("SELECT * FROM tb_usuarios WHERE idusuario = :ID", array(
+            ":ID" => $id));
         
-        if(count($result) > 0){
-            $row = $result[0];           
-            
-            $this->setIdusuario($row["idusuario"]);
-            $this->setDeslogin($row["deslogin"]);
-            $this->setDessenha($row["dessenha"]);
-            $this->setDtcadastro(new DateTime($row["dtcadastro"]));
-        }
+        if(count($result) > 0)
+            $this->setDados($result[0]);
+        
     }
     
     //como não tem o 'this' pode ser um metodo solto
@@ -76,12 +96,6 @@ class Usuario {
         return $sql->select("SELECT * FROM tb_usuarios ORDER BY idusuario;");
     }
     
-    public static function search($login) {
-        $sql = new Sql();
-        
-        return $sql->select("SELECT * FROM tb_usuarios WHERE deslogin LIKE :SEARCH ORDER BY idusuario", array(":SEARCH" => "%".$login."%"));
-    }
-    
     public function login($login, $password){
         $sql =  new Sql();
         
@@ -89,16 +103,38 @@ class Usuario {
             ":LOGIN"=>$login,
             ":SENHA"=>$password));
         
-        if(count($result) > 0){
-            $row = $result[0];
-            
-            $this->setIdusuario($row["idusuario"]);
-            $this->setDeslogin($row["deslogin"]);
-            $this->setDessenha($row["dessenha"]);
-            $this->setDtcadastro(new DateTime($row["dtcadastro"]));
-        }else {
-            
-            throw new Exception("Login ou senha tão errado");
-        }
+        if(count($result) > 0)
+            $this->setDados($result[0]);
+        else
+            throw new Exception("Login ou senha tão errado");        
     }
+    
+    //insere usuario novo
+    public function insert() {
+        $sql = new Sql();
+        
+        $result = $sql->select("CALL sp_usuarios_insert (:LOGIN, :PASSWORD)", array(
+            ":LOGIN"=>$this->getDeslogin(),
+            ":PASSWORD"=>$this->getDessenha()
+        ));
+        
+        if(count($result) > 0)
+            $this->setDados($result[0]);
+        else 
+            throw new Exception("resultados vazios ou nao inseridos");
+    }
+    
+    public function update($login, $senha){
+        $sql = new Sql();
+        
+        $this->setDeslogin($login);
+        $this->setDessenha($senha);
+        
+        $sql->query("UPDATE tb_usuarios SET deslogin = :LOGIN, dessenha = :SENHA WHERE idusuario = :ID", array(
+            ":LOGIN"=>$this->getDeslogin(),
+            ":SENHA"=>$this->getDessenha(),
+            ":ID"=>$this->getIdusuario()
+        ));
+    }
+    
 }
