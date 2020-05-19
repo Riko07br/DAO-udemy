@@ -23,7 +23,13 @@ require_once ("config.php");
 // $aluno->insert();
 
 //altera os valores de login e senha para dum user ja existente
+// $usuario =  new Usuario();
+// $usuario->loadById(4);
+// $usuario->update("new dude", "duuude");
+// echo $usuario;
+
 $usuario =  new Usuario();
 $usuario->loadById(4);
-$usuario->update("new dude", "duuude");
+$usuario->delete();
 echo $usuario;
+

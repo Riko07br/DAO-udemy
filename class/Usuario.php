@@ -66,9 +66,14 @@ class Usuario {
         return $sql->select("SELECT * FROM tb_usuarios WHERE deslogin LIKE :SEARCH ORDER BY idusuario", array(":SEARCH" => "%".$login."%"));
     }
    
+    //como não tem o 'this' pode ser um metodo solto
+    //não precisando instanciar um 'usuario' para chama-lo
+    public static function getList(){
+        $sql = new Sql();
+        return $sql->select("SELECT * FROM tb_usuarios ORDER BY idusuario;");
+    }
     
-    //funções publicas/////////////////////////////////////////////    
-    //
+    //funções publicas/////////////////////////////////////////////
     public function setDados($dados) {
         
         $this->setIdusuario($dados["idusuario"]);
@@ -89,12 +94,7 @@ class Usuario {
         
     }
     
-    //como não tem o 'this' pode ser um metodo solto
-    //não precisando instanciar um 'usuario' para chama-lo
-    public static function getList(){
-        $sql = new Sql();
-        return $sql->select("SELECT * FROM tb_usuarios ORDER BY idusuario;");
-    }
+    
     
     public function login($login, $password){
         $sql =  new Sql();
@@ -135,6 +135,19 @@ class Usuario {
             ":SENHA"=>$this->getDessenha(),
             ":ID"=>$this->getIdusuario()
         ));
+    }
+    
+    public function delete() {
+        $sql = new Sql();
+        
+        $sql->query("DELETE FROM tb_usuarios WHERE idusuario = :ID", array(
+            ":ID"=>$this->getIdusuario()
+        ));
+        
+        $this->setIdusuario(0);
+        $this->setDeslogin("");
+        $this->setDessenha("");
+        $this->setDtcadastro(new DateTime());
     }
     
 }
